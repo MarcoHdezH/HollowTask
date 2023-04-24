@@ -50,6 +50,43 @@ const autenticar = async (req, res) => {
         const error = new Error("Contraseña Incorrecta");
         return res.status(403).json({ msg: error.message });
     }
+};
+
+const confirmar = async (req, res) => {
+    const { token } = req.params;
+    const usuarioConfirmar = await Usuario.findOne({ token });
+    if (!usuarioConfirmar) {
+        const error = new Error("Token no Valido");
+        return res.status(403).json({ msg: error.message });
+    }
+
+    try {
+        usuarioConfirmar.confirmado = true;
+        usuarioConfirmar.token = "";
+        await usuarioConfirmar.save();
+        res.json({msg:'Usuario Verificado Correctamente'});
+    } catch (error) {
+        console.log(error);
+    }
 }
 
-export { registrar, autenticar };
+const olvidePassword = async (req,res) =>{
+    const {email} = req.body;
+    const usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+        const error = new Error("El Usuario no Existe");
+        return res.status(404).json({ msg: error.message });
+    }
+
+    try{
+        usuario.token=generarID();
+        await usuario.save();
+        res.json({msg:"Hemos enviado un Correo con Instrucciones para Cambiar su Contraseña"});
+        console.log(usuario);
+    }catch(error){
+        console.log(error)
+    }
+}
+
+
+export { registrar, autenticar, confirmar, olvidePassword};
